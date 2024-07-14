@@ -51,7 +51,8 @@ def add_activity_dialog(trip_id, date):
     # Convert time to 12-hour format string
     activity_time_str = activity_time.strftime('%I:%M %p')
 
-    if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}', disabled=add_activity_button_disabled):
+    if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}',
+                 disabled=add_activity_button_disabled):
         file_path = None
         if activity_file is not None:
             file_path = f"uploads/{activity_file.name}"
@@ -62,7 +63,6 @@ def add_activity_dialog(trip_id, date):
         st.success('Activity added successfully!')
         st.session_state['show_activity_dialog'] = False
         st.rerun()
-
 
 
 @st.experimental_dialog("Add Flight")
@@ -154,8 +154,12 @@ def show_trip_detail(trip_id):
     while current_date <= end_date:
         st.subheader(current_date.strftime("%A, %B %d, %Y"))
         activities = get_itinerary_for_trip(trip.id, current_date.strftime("%Y-%m-%d"))
+
+        # Sort activities by time
         if activities:
-            for activity in activities:
+            sorted_activities = sorted(activities, key=lambda x: datetime.strptime(x['time'], '%I:%M %p') if x[
+                'time'] else datetime.max.time())
+            for activity in sorted_activities:
                 activity_info = []
                 if activity['time']:
                     activity_info.append(f"**{activity['time']}:**")
