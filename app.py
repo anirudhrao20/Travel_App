@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from geopy.geocoders import Nominatim
 import folium
 from streamlit_folium import st_folium
-from api import search_flights, search_hotels
 
 # Hide the sidebar and set the app to fullscreen
 st.set_page_config(layout="wide")
@@ -51,51 +50,100 @@ def add_activity_dialog(trip_id, date):
 
 @st.experimental_dialog("Add Flight")
 def add_flight_dialog(trip_id):
-    trip = get_trip_by_id(trip_id)
-    origin = st.text_input('Origin', value='Enter origin IATA code')
-    destination = st.text_input('Destination', value='Enter destination IATA code')
-    departure_date = st.date_input('Departure Date', value=datetime.strptime(trip.start_date, "%Y-%m-%d"))
-
-    if st.button('Search Flights', key='search_flights'):
-        flights = search_flights(origin, destination, departure_date.strftime("%Y-%m-%d"))
-        st.write(flights)  # Display the flights or customize the display as needed
-
+    flight_cost = st.number_input('Cost', min_value=0.0, step=0.01)
+    flight_seat = st.text_input('Seat Number')
+    flight_airline = st.text_input('Airline')
+    flight_number = st.text_input('Flight Number')
+    flight_confirmation = st.text_input('Confirmation Number')
+    if st.button('Add Flight', key=f'add_flight_dialog_btn_{trip_id}'):
+        flight_details = f"Cost: ${flight_cost}, Seat: {flight_seat}, Airline: {flight_airline}, Flight Number: {flight_number}, Confirmation: {flight_confirmation}"
+        add_flight_to_trip(trip_id, flight_details)
+        st.success('Flight added successfully!')
+        st.session_state['show_flight_dialog'] = False
+        st.rerun()
 
 @st.experimental_dialog("Add Hotel")
 def add_hotel_dialog(trip_id):
-    trip = get_trip_by_id(trip_id)
-    location = st.text_input('Location', value='Enter location ID')
-    check_in_date = st.date_input('Check-in Date', value=datetime.strptime(trip.start_date, "%Y-%m-%d"))
-    check_out_date = st.date_input('Check-out Date', value=datetime.strptime(trip.end_date, "%Y-%m-%d"))
-
-    if st.button('Search Hotels', key='search_hotels'):
-        hotels = search_hotels(location, check_in_date.strftime("%Y-%m-%d"), check_out_date.strftime("%Y-%m-%d"))
-        st.write(hotels)  # Display the hotels or customize the display as needed
+    hotel_cost = st.number_input('Cost', min_value=0.0, step=0.01)
+    hotel_name = st.text_input('Hotel Name')
+    hotel_address = st.text_input('Address')
+    hotel_rooms = st.number_input('Number of Rooms', min_value=1, step=1)
+    hotel_confirmation = st.text_input('Confirmation Number')
+    if st.button('Add Hotel', key=f'add_hotel_dialog_btn_{trip_id}'):
+        hotel_details = f"Cost: ${hotel_cost}, Name: {hotel_name}, Address: {hotel_address}, Rooms: {hotel_rooms}, Confirmation: {hotel_confirmation}"
+        add_hotel_to_trip(trip_id, hotel_details)
+        st.success('Hotel added successfully!')
+        st.session_state['show_hotel_dialog'] = False
+        st.rerun()
 
 
 def show_trip_detail(trip_id):
     trip = get_trip_by_id(trip_id)
-    st.header(trip.title)
-    st.subheader(f"{trip.start_date} to {trip.end_date}")
-    itinerary = get_itinerary_for_trip(trip_id)
-    current_date = datetime.strptime(trip.start_date, "%Y-%m-%d")
+    start_date = datetime.strptime(trip.start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(trip.end_date, "%Y-%m-%d")
+    num_days = (end_date - start_date).days + 1
+    header_title = f'{trip.title} ({start_date.year})'
 
-    while current_date <= datetime.strptime(trip.end_date, "%Y-%m-%d"):
-        st.write(f"### {current_date.strftime('%A, %B %d, %Y')}")
-        activities = itinerary.get(current_date.strftime("%Y-%m-%d"), [])
-        for activity in activities:
-            st.write(f"**{activity['name']}** at {activity['time']} - ${activity['cost']:.2f}")
-            if activity['address']:
-                st.write(f"**Address:** {activity['address']}")
-                location = geolocator.geocode(activity['address'])
-                if location:
-                    map_ = folium.Map(location=[location.latitude, location.longitude], zoom_start=15)
-                    folium.Marker([location.latitude, location.longitude], popup=activity['address']).add_to(map_)
-                    st_folium(map_, width=700, height=500)
-            if activity['confirmation']:
-                st.write(f"**Confirmation:** {activity['confirmation']}")
-            if activity['file_path']:
-                st.write(f"[View Attachment]({activity['file_path']})")
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.header(header_title)
+    with col2:
+        if st.button('Back to all trips', key='back_to_all_trips'):
+            del st.session_state['selected_trip_id']
+            st.rerun()
+
+    if num_days == 1:
+        st.write(f'**Dates:** {start_date.strftime("%m/%d/%Y")} - {end_date.strftime("%m/%d/%Y")} ({num_days} day)')
+    else:
+        st.write(f'**Dates:** {start_date.strftime("%m/%d/%Y")} - {end_date.strftime("%m/%d/%Y")} ({num_days} days)')
+    st.write(f'**Flight Details:** {trip.flight_details}')
+    st.write(f'**Hotel Details:** {trip.hotel_details}')
+
+    # Arrange buttons in a row
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button('Add Flight', key=f'add_flight_{trip_id}'):
+            st.session_state['show_flight_dialog'] = True
+            add_flight_dialog(trip.id)
+    with col2:
+        if st.button('Add Hotel', key=f'add_hotel_{trip_id}'):
+            st.session_state['show_hotel_dialog'] = True
+            add_hotel_dialog(trip.id)
+    with col3:
+        if st.button('Delete Trip', key=f'delete_trip_{trip_id}'):
+            delete_trip(trip_id)
+            del st.session_state['selected_trip_id']
+            st.success('Trip deleted successfully!')
+            st.rerun()
+
+    # Display the itinerary as a calendar view
+    st.header('Itinerary')
+    current_date = start_date
+    while current_date <= end_date:
+        st.subheader(current_date.strftime("%A, %B %d, %Y"))
+        activities = get_itinerary_for_trip(trip.id, current_date.strftime("%Y-%m-%d"))
+        if activities:
+            for activity in activities:
+                activity_info = []
+                if activity['time']:
+                    activity_info.append(f"**{activity['time']}:**")
+                if activity['name']:
+                    activity_info.append(f"{activity['name']}\n")
+                if activity['cost']:
+                    activity_info.append(f"**Cost:** ${activity['cost']}\n")
+                if activity['address']:
+                    activity_info.append(f"**Address:** {activity['address']}\n")
+                    location = geolocator.geocode(activity['address'])
+                    if location:
+                        map_ = folium.Map(location=[location.latitude, location.longitude], zoom_start=15)
+                        folium.Marker([location.latitude, location.longitude], popup=activity['address']).add_to(map_)
+                        st_folium(map_, width=700, height=500)
+                if activity['confirmation']:
+                    activity_info.append(f"**Confirmation:** {activity['confirmation']}\n")
+                if activity['file_path']:
+                    activity_info.append(f"[View Attachment]({activity['file_path']})")
+
+                st.write('\n'.join(activity_info))
 
         if st.button('Add Activity', key=f'add_activity_btn_{trip_id}_{current_date.strftime("%Y-%m-%d")}'):
             st.session_state['show_activity_dialog'] = True
@@ -131,9 +179,3 @@ if 'selected_trip_id' not in st.session_state:
         st.write("No trips available.")
 else:
     show_trip_detail(st.session_state['selected_trip_id'])
-
-    if st.button('Add Flight', key='add_flight'):
-        add_flight_dialog(st.session_state['selected_trip_id'])
-
-    if st.button('Add Hotel', key='add_hotel'):
-        add_hotel_dialog(st.session_state['selected_trip_id'])
