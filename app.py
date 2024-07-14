@@ -7,13 +7,6 @@ import folium
 from streamlit_folium import st_folium
 from api import search_flights, search_hotels
 
-"""
-Travel Planner Application
-
-This Streamlit application allows users to create and manage travel plans,
-including trips, activities, flights, and hotel bookings.
-"""
-
 # Hide the sidebar and set the app to fullscreen
 st.set_page_config(layout="wide")
 
@@ -21,14 +14,9 @@ st.set_page_config(layout="wide")
 geolocator = Nominatim(user_agent="travel_planner")
 
 
+# Function to handle the trip creation modal
 @st.experimental_dialog("Create a New Trip")
 def create_trip_modal():
-    """
-    Display a modal dialog for creating a new trip.
-
-    This function handles the user interface for inputting trip details
-    and creates a new trip in the database upon submission.
-    """
     trip_title = st.text_input('Trip Title')
     start_date = st.date_input('Start Date', value=datetime.now(), format="MM/DD/YYYY")
     end_date = st.date_input('End Date', value=datetime.now(), format="MM/DD/YYYY")
@@ -42,13 +30,6 @@ def create_trip_modal():
 
 @st.experimental_dialog("Add Activity")
 def add_activity_dialog(trip_id, date):
-    """
-    Display a dialog for adding an activity to a trip.
-
-    Args:
-        trip_id (int): The ID of the trip to add the activity to.
-        date (str): The date for which to add the activity.
-    """
     activity_name = st.text_input('Activity Name')
     activity_time = st.text_input('Time (e.g., 8:00 AM, 7:00 PM)', value='')
     activity_cost = st.number_input('Cost', min_value=0.0, step=0.01)
@@ -70,12 +51,6 @@ def add_activity_dialog(trip_id, date):
 
 @st.experimental_dialog("Add Flight")
 def add_flight_dialog(trip_id):
-    """
-    Display a dialog for adding flight details to a trip.
-
-    Args:
-        trip_id (int): The ID of the trip to add the flight to.
-    """
     trip = get_trip_by_id(trip_id)
     origin = st.text_input('Origin', value='Enter origin IATA code')
     destination = st.text_input('Destination', value='Enter destination IATA code')
@@ -88,12 +63,6 @@ def add_flight_dialog(trip_id):
 
 @st.experimental_dialog("Add Hotel")
 def add_hotel_dialog(trip_id):
-    """
-    Display a dialog for adding hotel details to a trip.
-
-    Args:
-        trip_id (int): The ID of the trip to add the hotel to.
-    """
     trip = get_trip_by_id(trip_id)
     location = st.text_input('Location', value='Enter location ID')
     check_in_date = st.date_input('Check-in Date', value=datetime.strptime(trip.start_date, "%Y-%m-%d"))
@@ -105,12 +74,6 @@ def add_hotel_dialog(trip_id):
 
 
 def show_trip_detail(trip_id):
-    """
-    Display detailed information about a specific trip.
-
-    Args:
-        trip_id (int): The ID of the trip to display.
-    """
     trip = get_trip_by_id(trip_id)
     st.header(trip.title)
     st.subheader(f"{trip.start_date} to {trip.end_date}")
@@ -141,46 +104,36 @@ def show_trip_detail(trip_id):
         current_date += timedelta(days=1)
 
 
-def main():
-    """
-    Main function to run the Streamlit application.
+# Main content
+st.title('Travel Planner')
 
-    This function sets up the main page layout and handles the primary
-    user interactions for the Travel Planner app.
-    """
-    st.title('Travel Planner')
+if 'selected_trip_id' not in st.session_state:
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.header('Travel Planner')
+    with col2:
+        if st.button("Create Trip", key="create_trip_btn"):
+            st.session_state['show_trip_modal'] = True
 
-    if 'selected_trip_id' not in st.session_state:
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.header('Travel Planner')
-        with col2:
-            if st.button("Create Trip", key="create_trip_btn"):
-                st.session_state['show_trip_modal'] = True
+    if 'show_trip_modal' in st.session_state and st.session_state['show_trip_modal']:
+        create_trip_modal()
 
-        if 'show_trip_modal' in st.session_state and st.session_state['show_trip_modal']:
-            create_trip_modal()
+    trips = get_all_trips()
 
-        trips = get_all_trips()
-
-        if trips:
-            st.header('Saved Trips')
-            for trip in trips:
-                trip_date = datetime.strptime(trip.start_date, "%Y-%m-%d")
-                if st.button(f'{trip.title} ({trip_date.year})', key=f'trip_{trip.id}'):
-                    st.session_state['selected_trip_id'] = trip.id
-                    st.rerun()
-        else:
-            st.write("No trips available.")
+    if trips:
+        st.header('Saved Trips')
+        for trip in trips:
+            trip_date = datetime.strptime(trip.start_date, "%Y-%m-%d")
+            if st.button(f'{trip.title} ({trip_date.year})', key=f'trip_{trip.id}'):
+                st.session_state['selected_trip_id'] = trip.id
+                st.rerun()
     else:
-        show_trip_detail(st.session_state['selected_trip_id'])
+        st.write("No trips available.")
+else:
+    show_trip_detail(st.session_state['selected_trip_id'])
 
-        if st.button('Add Flight', key='add_flight'):
-            add_flight_dialog(st.session_state['selected_trip_id'])
+    if st.button('Add Flight', key='add_flight'):
+        add_flight_dialog(st.session_state['selected_trip_id'])
 
-        if st.button('Add Hotel', key='add_hotel'):
-            add_hotel_dialog(st.session_state['selected_trip_id'])
-
-
-if __name__ == "__main__":
-    main()
+    if st.button('Add Hotel', key='add_hotel'):
+        add_hotel_dialog(st.session_state['selected_trip_id'])
