@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 st.set_page_config(layout="wide")
 
 
-
 # Function to handle the trip creation modal
 @st.experimental_dialog("Create a New Trip")
 def create_trip_modal():
@@ -33,7 +32,6 @@ def add_activity_dialog(trip_id, date):
     activity_name = st.text_input('Activity Name')
     activity_time = st.time_input('Time', value=datetime.now().time())
     activity_cost = st.number_input('Cost', min_value=0.0, step=0.01)
-    activity_file = st.file_uploader('Upload File (Optional)', type=['pdf', 'jpg', 'jpeg', 'png'])
     activity_address = st.text_input('Address (Optional)')
     activity_confirmation = st.text_input('Confirmation Number (Optional)')
 
@@ -47,12 +45,7 @@ def add_activity_dialog(trip_id, date):
 
     if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}',
                  disabled=add_activity_button_disabled):
-        file_path = None
-        if activity_file is not None:
-            file_path = f"uploads/{activity_file.name}"
-            with open(file_path, "wb") as f:
-                f.write(activity_file.getbuffer())
-        add_activity_to_day(trip_id, date, activity_name, activity_time_str, activity_cost, file_path, activity_address,
+        add_activity_to_day(trip_id, date, activity_name, activity_time_str, activity_cost, None, activity_address,
                             activity_confirmation)
         st.success('Activity added successfully!')
         st.session_state['show_activity_dialog'] = False
@@ -81,7 +74,6 @@ def add_flight_dialog(trip_id):
         st.rerun()
 
 
-@st.experimental_dialog("Add Hotel")
 def add_hotel_dialog(trip_id):
     hotel_cost = st.number_input('Cost', min_value=0.0, step=0.01)
     hotel_name = st.text_input('Hotel Name')
@@ -163,8 +155,6 @@ def show_trip_detail(trip_id):
                     activity_info.append(f"**Address:** {activity['address']}\n")
                 if activity['confirmation']:
                     activity_info.append(f"**Confirmation:** {activity['confirmation']}\n")
-                if activity['file_path']:
-                    activity_info.append(f"[View Attachment]({activity['file_path']})")
 
                 st.write('\n'.join(activity_info))
 
