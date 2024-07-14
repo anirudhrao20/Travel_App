@@ -116,6 +116,7 @@ def add_hotel_to_trip(trip_id, hotel_details):
     conn.commit()
     conn.close()
 
+
 def add_activity_to_day(trip_id, date, name, time, cost, file_path, address, confirmation):
     """
     Add an activity to a specific day of a trip.
