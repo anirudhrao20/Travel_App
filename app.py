@@ -2,23 +2,18 @@ import streamlit as st
 from db import create_trip, get_all_trips, get_trip_by_id, add_flight_to_trip, add_hotel_to_trip, add_activity_to_day, \
     get_itinerary_for_trip, delete_trip
 from datetime import datetime, timedelta
-from geopy.geocoders import Nominatim
-import folium
-from streamlit_folium import st_folium
 
 # Hide the sidebar and set the app to fullscreen
 st.set_page_config(layout="wide")
 
-# Initialize geolocator
-geolocator = Nominatim(user_agent="travel_planner")
 
 
 # Function to handle the trip creation modal
 @st.experimental_dialog("Create a New Trip")
 def create_trip_modal():
     trip_title = st.text_input('Trip Title')
-    start_date = st.date_input('Start Date', value=datetime.now(), format="MM/DD/YYYY")
-    end_date = st.date_input('End Date', value=datetime.now(), format="MM/DD/YYYY")
+    start_date = st.date_input('Start Date', value=datetime.now())
+    end_date = st.date_input('End Date', value=datetime.now())
 
     if not trip_title:
         st.warning("Trip title is required.")
@@ -36,7 +31,7 @@ def create_trip_modal():
 @st.experimental_dialog("Add Activity")
 def add_activity_dialog(trip_id, date):
     activity_name = st.text_input('Activity Name')
-    activity_time = st.time_input('Time')
+    activity_time = st.time_input('Time', value=datetime.now().time())
     activity_cost = st.number_input('Cost', min_value=0.0, step=0.01)
     activity_file = st.file_uploader('Upload File (Optional)', type=['pdf', 'jpg', 'jpeg', 'png'])
     activity_address = st.text_input('Address (Optional)')
@@ -48,7 +43,6 @@ def add_activity_dialog(trip_id, date):
     else:
         add_activity_button_disabled = False
 
-    # Convert time to 12-hour format string
     activity_time_str = activity_time.strftime('%I:%M %p')
 
     if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}',
@@ -124,10 +118,8 @@ def show_trip_detail(trip_id):
             del st.session_state['selected_trip_id']
             st.rerun()
 
-    if num_days == 1:
-        st.write(f'**Dates:** {start_date.strftime("%m/%d/%Y")} - {end_date.strftime("%m/%d/%Y")} ({num_days} day)')
-    else:
-        st.write(f'**Dates:** {start_date.strftime("%m/%d/%Y")} - {end_date.strftime("%m/%d/%Y")} ({num_days} days)')
+    st.write(
+        f'**Dates:** {start_date.strftime("%m/%d/%Y")} - {end_date.strftime("%m/%d/%Y")} ({num_days} day{"s" if num_days > 1 else ""})')
     st.write(f'**Flight Details:** {trip.flight_details}')
     st.write(f'**Hotel Details:** {trip.hotel_details}')
 
@@ -169,11 +161,6 @@ def show_trip_detail(trip_id):
                     activity_info.append(f"**Cost:** ${activity['cost']}\n")
                 if activity['address']:
                     activity_info.append(f"**Address:** {activity['address']}\n")
-                    location = geolocator.geocode(activity['address'])
-                    if location:
-                        map_ = folium.Map(location=[location.latitude, location.longitude], zoom_start=15)
-                        folium.Marker([location.latitude, location.longitude], popup=activity['address']).add_to(map_)
-                        st_folium(map_, width=700, height=500)
                 if activity['confirmation']:
                     activity_info.append(f"**Confirmation:** {activity['confirmation']}\n")
                 if activity['file_path']:
