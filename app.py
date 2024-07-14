@@ -36,17 +36,20 @@ def create_trip_modal():
 @st.experimental_dialog("Add Activity")
 def add_activity_dialog(trip_id, date):
     activity_name = st.text_input('Activity Name')
-    activity_time = st.text_input('Time (e.g., 8:00 AM, 7:00 PM)', value='')
+    activity_time = st.time_input('Time')
     activity_cost = st.number_input('Cost', min_value=0.0, step=0.01)
     activity_file = st.file_uploader('Upload File (Optional)', type=['pdf', 'jpg', 'jpeg', 'png'])
     activity_address = st.text_input('Address (Optional)')
     activity_confirmation = st.text_input('Confirmation Number (Optional)')
 
-    if not activity_name or not activity_time:
+    if not activity_name or activity_time is None:
         st.warning("Activity name and time are required.")
         add_activity_button_disabled = True
     else:
         add_activity_button_disabled = False
+
+    # Convert time to 12-hour format string
+    activity_time_str = activity_time.strftime('%I:%M %p')
 
     if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}', disabled=add_activity_button_disabled):
         file_path = None
@@ -54,11 +57,12 @@ def add_activity_dialog(trip_id, date):
             file_path = f"uploads/{activity_file.name}"
             with open(file_path, "wb") as f:
                 f.write(activity_file.getbuffer())
-        add_activity_to_day(trip_id, date, activity_name, activity_time, activity_cost, file_path, activity_address,
+        add_activity_to_day(trip_id, date, activity_name, activity_time_str, activity_cost, file_path, activity_address,
                             activity_confirmation)
         st.success('Activity added successfully!')
         st.session_state['show_activity_dialog'] = False
         st.rerun()
+
 
 
 @st.experimental_dialog("Add Flight")
