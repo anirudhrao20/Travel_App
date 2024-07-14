@@ -1,6 +1,2 @@
 streamlit
-geopy
-folium
-streamlit_folium
-geopy
 requests
