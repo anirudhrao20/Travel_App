@@ -7,9 +7,14 @@ from datetime import datetime, timedelta
 st.set_page_config(layout="wide")
 
 
-# Function to handle the trip creation modal
 @st.experimental_dialog("Create a New Trip")
 def create_trip_modal():
+    """
+    Display a modal dialog for creating a new trip.
+
+    This function allows users to input trip details such as title, start date, and end date.
+    It then creates a new trip with the provided information.
+    """
     trip_title = st.text_input('Trip Title')
     start_date = st.date_input('Start Date', value=datetime.now())
     end_date = st.date_input('End Date', value=datetime.now())
@@ -29,6 +34,15 @@ def create_trip_modal():
 
 @st.experimental_dialog("Add Activity")
 def add_activity_dialog(trip_id, date):
+    """
+    Display a dialog for adding a new activity to a trip.
+
+    Args:
+        trip_id (int): The ID of the trip to add the activity to.
+        date (str): The date of the activity in 'YYYY-MM-DD' format.
+
+    This function allows users to input activity details and adds the activity to the specified trip and date.
+    """
     activity_name = st.text_input('Activity Name')
     activity_time = st.time_input('Time', value=datetime.now().time())
     activity_cost = st.number_input('Cost', min_value=0.0, step=0.01)
@@ -54,6 +68,14 @@ def add_activity_dialog(trip_id, date):
 
 @st.experimental_dialog("Add Flight")
 def add_flight_dialog(trip_id):
+    """
+    Display a dialog for adding flight details to a trip.
+
+    Args:
+        trip_id (int): The ID of the trip to add the flight details to.
+
+    This function allows users to input flight information and adds it to the specified trip.
+    """
     flight_cost = st.number_input('Cost', min_value=0.0, step=0.01)
     flight_seat = st.text_input('Seat Number')
     flight_airline = st.text_input('Airline')
@@ -74,7 +96,16 @@ def add_flight_dialog(trip_id):
         st.rerun()
 
 
+@st.experimental_dialog("Add Hotel")
 def add_hotel_dialog(trip_id):
+    """
+    Display a dialog for adding hotel details to a trip.
+
+    Args:
+        trip_id (int): The ID of the trip to add the hotel details to.
+
+    This function allows users to input hotel information and adds it to the specified trip.
+    """
     hotel_cost = st.number_input('Cost', min_value=0.0, step=0.01)
     hotel_name = st.text_input('Hotel Name')
     hotel_address = st.text_input('Address')
@@ -96,6 +127,15 @@ def add_hotel_dialog(trip_id):
 
 
 def show_trip_detail(trip_id):
+    """
+    Display detailed information about a specific trip.
+
+    Args:
+        trip_id (int): The ID of the trip to display.
+
+    This function shows trip details, including dates, flight and hotel information, and the itinerary.
+    It also provides options to add activities, flights, hotels, and delete the trip.
+    """
     trip = get_trip_by_id(trip_id)
     start_date = datetime.strptime(trip.start_date, "%Y-%m-%d")
     end_date = datetime.strptime(trip.end_date, "%Y-%m-%d")
