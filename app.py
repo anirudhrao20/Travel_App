@@ -20,7 +20,13 @@ def create_trip_modal():
     start_date = st.date_input('Start Date', value=datetime.now(), format="MM/DD/YYYY")
     end_date = st.date_input('End Date', value=datetime.now(), format="MM/DD/YYYY")
 
-    if st.button('Add Trip', key='add_trip'):
+    if not trip_title:
+        st.warning("Trip title is required.")
+        add_trip_button_disabled = True
+    else:
+        add_trip_button_disabled = False
+
+    if st.button('Add Trip', key='add_trip', disabled=add_trip_button_disabled):
         create_trip(trip_title, start_date, end_date)
         st.success('Trip added successfully!')
         st.session_state['show_trip_modal'] = False
@@ -35,7 +41,14 @@ def add_activity_dialog(trip_id, date):
     activity_file = st.file_uploader('Upload File (Optional)', type=['pdf', 'jpg', 'jpeg', 'png'])
     activity_address = st.text_input('Address (Optional)')
     activity_confirmation = st.text_input('Confirmation Number (Optional)')
-    if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}'):
+
+    if not activity_name or not activity_time:
+        st.warning("Activity name and time are required.")
+        add_activity_button_disabled = True
+    else:
+        add_activity_button_disabled = False
+
+    if st.button('Add Activity', key=f'add_activity_dialog_btn_{trip_id}_{date}', disabled=add_activity_button_disabled):
         file_path = None
         if activity_file is not None:
             file_path = f"uploads/{activity_file.name}"
@@ -55,12 +68,20 @@ def add_flight_dialog(trip_id):
     flight_airline = st.text_input('Airline')
     flight_number = st.text_input('Flight Number')
     flight_confirmation = st.text_input('Confirmation Number')
-    if st.button('Add Flight', key=f'add_flight_dialog_btn_{trip_id}'):
+
+    if not flight_airline or not flight_confirmation or not flight_number:
+        st.warning("Airline, flight number, and confirmation number are required.")
+        add_flight_button_disabled = True
+    else:
+        add_flight_button_disabled = False
+
+    if st.button('Add Flight', key=f'add_flight_dialog_btn_{trip_id}', disabled=add_flight_button_disabled):
         flight_details = f"Cost: ${flight_cost}, Seat: {flight_seat}, Airline: {flight_airline}, Flight Number: {flight_number}, Confirmation: {flight_confirmation}"
         add_flight_to_trip(trip_id, flight_details)
         st.success('Flight added successfully!')
         st.session_state['show_flight_dialog'] = False
         st.rerun()
+
 
 @st.experimental_dialog("Add Hotel")
 def add_hotel_dialog(trip_id):
@@ -69,7 +90,14 @@ def add_hotel_dialog(trip_id):
     hotel_address = st.text_input('Address')
     hotel_rooms = st.number_input('Number of Rooms', min_value=1, step=1)
     hotel_confirmation = st.text_input('Confirmation Number')
-    if st.button('Add Hotel', key=f'add_hotel_dialog_btn_{trip_id}'):
+
+    if not hotel_name or not hotel_address or not hotel_confirmation:
+        st.warning("Hotel name, address, and confirmation number are required.")
+        add_hotel_button_disabled = True
+    else:
+        add_hotel_button_disabled = False
+
+    if st.button('Add Hotel', key=f'add_hotel_dialog_btn_{trip_id}', disabled=add_hotel_button_disabled):
         hotel_details = f"Cost: ${hotel_cost}, Name: {hotel_name}, Address: {hotel_address}, Rooms: {hotel_rooms}, Confirmation: {hotel_confirmation}"
         add_hotel_to_trip(trip_id, hotel_details)
         st.success('Hotel added successfully!')
