@@ -206,12 +206,11 @@ def show_trip_detail(trip_id):
 
 
 # Main content
-st.title('Travel Planner')
 
 if 'selected_trip_id' not in st.session_state:
     col1, col2 = st.columns([4, 1])
     with col1:
-        st.header('Travel Planner')
+        st.title('Travel Planner')
     with col2:
         if st.button("Create Trip", key="create_trip_btn"):
             st.session_state['show_trip_modal'] = True
