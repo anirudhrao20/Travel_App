@@ -166,7 +166,7 @@ def show_trip_detail(trip_id):
             st.session_state['show_hotel_dialog'] = True
             add_hotel_dialog(trip.id)
     with col3:
-        if st.button('Delete Trip', key=f'delete_trip_{trip_id}'):
+        if st.button('Delete Trip', key=f'delete_trip_{trip_id}', type="primary"):
             delete_trip(trip_id)
             del st.session_state['selected_trip_id']
             st.success('Trip deleted successfully!')
