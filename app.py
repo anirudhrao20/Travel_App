@@ -44,7 +44,7 @@ def add_activity_dialog(trip_id, date):
     This function allows users to input activity details and adds the activity to the specified trip and date.
     """
     activity_name = st.text_input('Activity Name')
-    activity_time = st.time_input('Time', value=datetime.now().time())
+    activity_time = st.time_input('Time')
     activity_cost = st.number_input('Cost', min_value=0.0, step=0.01)
     activity_address = st.text_input('Address (Optional)')
     activity_confirmation = st.text_input('Confirmation Number (Optional)')
