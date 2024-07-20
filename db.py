@@ -14,10 +14,7 @@ def connect_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT,
             start_date TEXT,
-            end_date TEXT,
-            flight_details TEXT,
-            hotel_details TEXT,
-            itinerary TEXT
+            end_date TEXT
         )
     ''')
     conn.execute('''
@@ -30,6 +27,30 @@ def connect_db():
             cost REAL,
             file_path TEXT,
             address TEXT,
+            confirmation TEXT,
+            FOREIGN KEY (trip_id) REFERENCES trips (id)
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS flights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trip_id INTEGER,
+            cost REAL,
+            seat TEXT,
+            airline TEXT,
+            flight_number TEXT,
+            confirmation TEXT,
+            FOREIGN KEY (trip_id) REFERENCES trips (id)
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS hotels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trip_id INTEGER,
+            cost REAL,
+            name TEXT,
+            address TEXT,
+            rooms INTEGER,
             confirmation TEXT,
             FOREIGN KEY (trip_id) REFERENCES trips (id)
         )
@@ -65,8 +86,9 @@ def get_all_trips():
     trips = cursor.fetchall()
     conn.close()
     return [
-        Trip(id=row[0], title=row[1], start_date=row[2], end_date=row[3], flight_details=row[4], hotel_details=row[5],
-             itinerary=row[6]) for row in trips]
+        Trip(id=row[0], title=row[1], start_date=row[2], end_date=row[3])
+        for row in trips
+    ]
 
 
 def get_trip_by_id(trip_id):
@@ -84,35 +106,48 @@ def get_trip_by_id(trip_id):
     row = cursor.fetchone()
     conn.close()
     if row:
-        return Trip(id=row[0], title=row[1], start_date=row[2], end_date=row[3], flight_details=row[4],
-                    hotel_details=row[5], itinerary=row[6])
+        return Trip(id=row[0], title=row[1], start_date=row[2], end_date=row[3])
     return None
 
 
-def add_flight_to_trip(trip_id, flight_details):
+def add_flight_to_trip(trip_id, cost, seat, airline, flight_number, confirmation):
     """
     Add flight details to a specific trip.
 
     Args:
         trip_id (int): The ID of the trip to update.
-        flight_details (str): The flight details to add to the trip.
+        cost (float): The cost of the flight.
+        seat (str): The seat number for the flight.
+        airline (str): The airline name.
+        flight_number (str): The flight number.
+        confirmation (str): The confirmation number for the flight.
     """
     conn = connect_db()
-    conn.execute('UPDATE trips SET flight_details = ? WHERE id = ?', (flight_details, trip_id))
+    conn.execute('''
+        INSERT INTO flights (trip_id, cost, seat, airline, flight_number, confirmation) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (trip_id, cost, seat, airline, flight_number, confirmation))
     conn.commit()
     conn.close()
 
 
-def add_hotel_to_trip(trip_id, hotel_details):
+def add_hotel_to_trip(trip_id, cost, name, address, rooms, confirmation):
     """
     Add hotel details to a specific trip.
 
     Args:
         trip_id (int): The ID of the trip to update.
-        hotel_details (str): The hotel details to add to the trip.
+        cost (float): The cost of the hotel.
+        name (str): The hotel name.
+        address (str): The hotel address.
+        rooms (int): The number of rooms booked.
+        confirmation (str): The confirmation number for the hotel.
     """
     conn = connect_db()
-    conn.execute('UPDATE trips SET hotel_details = ? WHERE id = ?', (hotel_details, trip_id))
+    conn.execute('''
+        INSERT INTO hotels (trip_id, cost, name, address, rooms, confirmation) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (trip_id, cost, name, address, rooms, confirmation))
     conn.commit()
     conn.close()
 
@@ -156,7 +191,48 @@ def get_itinerary_for_trip(trip_id, date):
     conn.close()
     return [
         {'name': row[3], 'time': row[4], 'cost': row[5], 'file_path': row[6], 'address': row[7], 'confirmation': row[8]}
-        for row in activities]
+        for row in activities
+    ]
+
+
+def get_flights_for_trip(trip_id):
+    """
+    Retrieve all flights for a specific trip.
+
+    Args:
+        trip_id (int): The ID of the trip.
+
+    Returns:
+        list: A list of dictionaries containing flight details for the specified trip.
+    """
+    conn = connect_db()
+    cursor = conn.execute('SELECT * FROM flights WHERE trip_id = ?', (trip_id,))
+    flights = cursor.fetchall()
+    conn.close()
+    return [
+        {'cost': row[2], 'seat': row[3], 'airline': row[4], 'flight_number': row[5], 'confirmation': row[6]}
+        for row in flights
+    ]
+
+
+def get_hotels_for_trip(trip_id):
+    """
+    Retrieve all hotels for a specific trip.
+
+    Args:
+        trip_id (int): The ID of the trip.
+
+    Returns:
+        list: A list of dictionaries containing hotel details for the specified trip.
+    """
+    conn = connect_db()
+    cursor = conn.execute('SELECT * FROM hotels WHERE trip_id = ?', (trip_id,))
+    hotels = cursor.fetchall()
+    conn.close()
+    return [
+        {'cost': row[2], 'name': row[3], 'address': row[4], 'rooms': row[5], 'confirmation': row[6]}
+        for row in hotels
+    ]
 
 
 def delete_trip(trip_id):
@@ -168,6 +244,8 @@ def delete_trip(trip_id):
     """
     conn = connect_db()
     conn.execute('DELETE FROM activities WHERE trip_id = ?', (trip_id,))
+    conn.execute('DELETE FROM flights WHERE trip_id = ?', (trip_id,))
+    conn.execute('DELETE FROM hotels WHERE trip_id = ?', (trip_id,))
     conn.execute('DELETE FROM trips WHERE id = ?', (trip_id,))
     conn.commit()
     conn.close()
@@ -182,12 +260,9 @@ class Trip:
         title (str): The title of the trip.
         start_date (str): The start date of the trip in 'YYYY-MM-DD' format.
         end_date (str): The end date of the trip in 'YYYY-MM-DD' format.
-        flight_details (str): Details about the flight for the trip.
-        hotel_details (str): Details about the hotel for the trip.
-        itinerary (str): The itinerary for the trip.
     """
 
-    def __init__(self, id, title, start_date, end_date, flight_details, hotel_details, itinerary):
+    def __init__(self, id, title, start_date, end_date):
         """
         Initialize a Trip object.
 
@@ -196,14 +271,8 @@ class Trip:
             title (str): The title of the trip.
             start_date (str): The start date of the trip in 'YYYY-MM-DD' format.
             end_date (str): The end date of the trip in 'YYYY-MM-DD' format.
-            flight_details (str): Details about the flight for the trip.
-            hotel_details (str): Details about the hotel for the trip.
-            itinerary (str): The itinerary for the trip.
         """
         self.id = id
         self.title = title
         self.start_date = start_date
         self.end_date = end_date
-        self.flight_details = flight_details
-        self.hotel_details = hotel_details
-        self.itinerary = itinerary

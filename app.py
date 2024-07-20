@@ -1,6 +1,6 @@
 import streamlit as st
 from db import create_trip, get_all_trips, get_trip_by_id, add_flight_to_trip, add_hotel_to_trip, add_activity_to_day, \
-    get_itinerary_for_trip, delete_trip
+    get_itinerary_for_trip, delete_trip, get_flights_for_trip, get_hotels_for_trip
 from datetime import datetime, timedelta
 
 # Hide the sidebar and set the app to fullscreen
@@ -89,8 +89,7 @@ def add_flight_dialog(trip_id):
         add_flight_button_disabled = False
 
     if st.button('Add Flight', key=f'add_flight_dialog_btn_{trip_id}', disabled=add_flight_button_disabled):
-        flight_details = f"Cost: ${flight_cost}, Seat: {flight_seat}, Airline: {flight_airline}, Flight Number: {flight_number}, Confirmation: {flight_confirmation}"
-        add_flight_to_trip(trip_id, flight_details)
+        add_flight_to_trip(trip_id, flight_cost, flight_seat, flight_airline, flight_number, flight_confirmation)
         st.success('Flight added successfully!')
         st.session_state['show_flight_dialog'] = False
         st.rerun()
@@ -119,8 +118,7 @@ def add_hotel_dialog(trip_id):
         add_hotel_button_disabled = False
 
     if st.button('Add Hotel', key=f'add_hotel_dialog_btn_{trip_id}', disabled=add_hotel_button_disabled):
-        hotel_details = f"Cost: ${hotel_cost}, Name: {hotel_name}, Address: {hotel_address}, Rooms: {hotel_rooms}, Confirmation: {hotel_confirmation}"
-        add_hotel_to_trip(trip_id, hotel_details)
+        add_hotel_to_trip(trip_id, hotel_cost, hotel_name, hotel_address, hotel_rooms, hotel_confirmation)
         st.success('Hotel added successfully!')
         st.session_state['show_hotel_dialog'] = False
         st.rerun()
@@ -152,10 +150,21 @@ def show_trip_detail(trip_id):
 
     st.write(
         f'**Dates:** {start_date.strftime("%m/%d/%Y")} - {end_date.strftime("%m/%d/%Y")} ({num_days} day{"s" if num_days > 1 else ""})')
-    st.write(f'**Flight Details:** {trip.flight_details}')
-    st.write(f'**Hotel Details:** {trip.hotel_details}')
 
-    # Arrange buttons in a row
+    flights = get_flights_for_trip(trip_id)
+    if flights:
+        st.write('**Flight Details:**')
+        for flight in flights:
+            st.write(
+                f'Cost: ${flight["cost"]}, Seat: {flight["seat"]}, Airline: {flight["airline"]}, Flight Number: {flight["flight_number"]}, Confirmation: {flight["confirmation"]}')
+
+    hotels = get_hotels_for_trip(trip_id)
+    if hotels:
+        st.write('**Hotel Details:**')
+        for hotel in hotels:
+            st.write(
+                f'Cost: ${hotel["cost"]}, Name: {hotel["name"]}, Address: {hotel["address"]}, Rooms: {hotel["rooms"]}, Confirmation: {hotel["confirmation"]}')
+
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button('Add Flight', key=f'add_flight_{trip_id}'):
