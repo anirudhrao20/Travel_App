@@ -1,85 +1,87 @@
+
 # Travel Planner App
 
-A comprehensive web-based travel planner application built using Streamlit and SQLite. This application allows users to create and manage trips, including detailed itineraries with activities, flight details, and hotel reservations. Users can manually input details or search via API for flight and hotel information.
-
 ## Overview
-
-The Travel Planner App is designed to help users organize their trips efficiently. Users can create trips by specifying the trip title and dates. For each trip, users can add activities for each day, including details like time, cost, and confirmation numbers. The app also allows users to manage flight and hotel details, either by manual entry or via API search.
+The Travel Planner App is a comprehensive web-based application designed to assist users in organizing and managing their trips efficiently. The application enables users to create trips, add detailed itineraries for each day, and manage flight and hotel details. Users can input information manually, catering to their trip needs. The primary objective of this project is to provide a user-friendly and simple platform for trip planning and management, ensuring all trip details are organized in one place and accessible.
 
 ## Features
+- **Create and Manage Trips:** Easily create trips and add details such as itineraries, flights, and hotel reservations.
+- **User-Friendly Interface:** Built using Streamlit, providing an interactive and responsive design.
+- **Data Persistence:** All trip details are stored in an SQLite database, ensuring data is saved and retrievable.
 
-- **Trip Management**: Create, view, and manage trips.
-- **Detailed Itinerary**: Add activities for each day, including optional details like time, cost, address, and confirmation numbers.
-- **Flight Details**: Add flight details manually or search via API.
-- **Hotel Reservations**: Add hotel details manually or search via API.
-- **File Uploads**: Attach files to activities for reference.
+## Intended Audience
+- Travelers who want to manage and organize their trip details.
+- Travel agencies that manage trips for clients.
+- Individuals who frequently travel for business or leisure and need an organized way to plan their trips.
 
-## Sections Breakdown
+## Requirements
+- **Libraries and Dependencies:** The necessary libraries for this project are:
+  - `streamlit`
+  - `sqlite3`
+  - `datetime`
 
-### 1. Setup
+## Usage
+1. **Run the application:**
+    ```sh
+    streamlit run app.py
+    ```
+2. **Interact with the application through the Streamlit interface:**
+    - **Create Trip:** Use the "Create Trip" menu to add new trips with details such as title, start date, end date, flight details, and hotel details.
+    - **View Trips:** Use the "View Trips" menu to see all trips, delete trips, and view associated activities.
 
-#### 1.1. Requirements
+## Project Structure
+- `app.py`: Main application file that integrates the frontend and backend, handles user interactions, and displays the interface.
+- `db.py`: Manages the SQLite database, including creating tables, inserting, retrieving, and deleting data.
+- `test_db.py`: Contains unit tests for the database operations.
+- `requirements.txt`: List of required libraries.
 
-Ensure you have the required packages installed. You can install them using the `requirements.txt` file provided:
+## Data Design
+- **Trip:**
+  ```json
+  {
+      "id": Integer,
+      "title": String,
+      "start_date": String,
+      "end_date": String,
+      "flight_details": String,
+      "hotel_details": String,
+      "itinerary": String
+  }
+  ```
+- **Activity:**
+  ```json
+  {
+      "id": Integer,
+      "trip_id": Integer,
+      "date": String,
+      "name": String,
+      "time": String,
+      "cost": Float,
+      "file_path": String,
+      "address": String,
+      "confirmation": String
+  }
+  ```
 
-```bash
-pip install -r requirements.txt
-```
+## Testing
+1. **Run the tests:**
+    ```sh
+    python -m unittest test_db.py
+    ```
+2. **Testing Methods:**
+    - Unit Testing: Test individual functions for correctness.
+    - Integration Testing: Ensure different parts of the application work together correctly.
+    - User Acceptance Testing: Validate the application with real users to ensure it meets their needs.
 
-2. Application Structure
-2.1. app.py
+## Implementation Plan
+- **Week 1:** Project setup and database operations.
+- **Week 2:** Develop the user interface.
+- **Week 3:** Integrate frontend and backend.
+- **Week 4:** Testing and debugging.
+- **Week 5:** Final deployment and user acceptance testing.
 
-The main application file that sets up the Streamlit interface and handles user interactions.
+## License
+This project is licensed under the MIT License. See the LICENSE file for more details.
 
-Trip Creation: Users can create new trips by providing a title and date range. This is handled through a modal dialog.
-Trip Details View: Once a trip is selected, users can view and manage trip details, including activities, flights, and hotels.
-Activity Management: Users can add activities to each day of the trip through a modal dialog.
-Flight and Hotel Management: Users can add flight and hotel details either manually or via an API search.
-2.2. db.py
-
-Handles database operations using SQLite. It includes functions to create trips, add activities, and retrieve trip and activity details.
-
-Database Connection: Establishes a connection to the SQLite database and sets up the schema if it doesn't already exist.
-Trip Operations: Functions to create a trip, get all trips, and get a trip by ID.
-Activity Operations: Functions to add an activity to a day and retrieve the itinerary for a trip.
-Flight and Hotel Operations: Functions to add flight and hotel details.
-3. Detailed Guide
-3.1. Running the Application
-
-To run the application, execute the following command in your terminal:
-
-```bash
-streamlit run app.py
-```
-3.2. Creating a Trip
-
-Click on the "Create Trip" button.
-Enter the trip title, start date, and end date.
-Click "Add Trip" to save the trip.
-3.3. Viewing and Managing Trips
-
-Select a trip from the list of saved trips.
-View trip details including dates, flight, and hotel information.
-Add activities for each day by clicking on "Add Activity".
-Add flight details by clicking on "Add Flight".
-Add hotel details by clicking on "Add Hotel".
-3.4. Adding Activities
-
-Click on "Add Activity" for a specific day.
-Enter the activity name, time, cost, and other optional details.
-Click "Add Activity" to save the activity.
-3.5. Adding Flight Details
-
-Click on "Add Flight".
-Choose to add details manually or search via API.
-If adding manually, enter the flight cost, seat number, airline, flight number, and confirmation number.
-Click "Add Flight" to save the details.
-3.6. Adding Hotel Details
-
-Click on "Add Hotel".
-Choose to add details manually or search via API.
-If adding manually, enter the hotel cost, name, address, number of rooms, and confirmation number.
-Click "Add Hotel" to save the details.
-Conclusion
-
-The Travel Planner App is a robust tool for organizing and managing trips, providing a user-friendly interface to add detailed trip information. Whether planning a simple vacation or a complex itinerary, this app offers the features needed to ensure every detail is accounted for.
+## Acknowledgements
+Special thanks to the course instructors and fellow students for their support and guidance throughout the project.
